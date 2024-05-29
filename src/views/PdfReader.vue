@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import type { PDFDocumentProxy } from "pdfjs-dist";
 import { ref, watchEffect } from "vue";
-import PDF from "../components/pdf-vue3.vue";
+import type { PDFDocumentProxy } from "..";
+import { PDF } from "..";
 
 const isMobile = ref(false);
 const page = ref(1);

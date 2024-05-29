@@ -1,14 +1,19 @@
 {
-  "files": [],
-  "references": [
-    {
-      "path": "./tsconfig.node.json"
-    },
-    {
-      "path": "./tsconfig.app.json"
-    },
-    {
-      "path": "./tsconfig.vitest.json"
-    }
-  ]
+  "extends": "@tsconfig/node20/tsconfig.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "lib": ["ES2022"],
+    "moduleResolution": "Bundler",
+    "esModuleInterop": true,
+    "declaration": true,
+    "strict": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "outDir": "./dist",
+    "declarationDir": "./dist/types",
+    "baseUrl": "."
+  },
+  "include": ["env.d.ts", "src/**/*",  "src/**/*.vue"],
+  "exclude": ["node_modules", "src/**/__tests__/*"]
 }

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { GlobalWorkerOptions, getDocument } from 'pdfjs-dist';
 import pdfJSWorkerURL from "pdfjs-dist/build/pdf.worker?url";
+import type { PDFDocumentProxy } from "pdfjs-dist/types/src/pdf";
 import { computed, onBeforeMount, onUnmounted, ref, watch, type Ref } from "vue";
-import type { PDFDocumentProxy } from "../components/index";
 
 const dpr = ref(1);
 
@@ -186,7 +186,7 @@ const renderPDF = async () => {
       canvas.height = scaledViewport.height;
       itemHeightList.value[i] = calcH +=
         scaledViewport.height / dpr.value + rowGap.value;
-      await page.render({
+      page.render({
         canvasContext: context as CanvasRenderingContext2D,
         viewport: scaledViewport,
       });

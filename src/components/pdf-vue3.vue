@@ -51,7 +51,7 @@ const props = withDefaults(
     pdfWidth: "100%",
     rowGap: 8,
     page: 1,
-    cMapUrl: "https://unpkg.com/pdfjs-dist@3.7.107/cmaps/",
+    cMapUrl: "https://unpkg.com/pdfjs-dist@4.2.67/cmaps/",
   }
 );
 

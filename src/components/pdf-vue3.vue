@@ -213,7 +213,7 @@ let scrollTimer: number;
 const handleScroll = (event: any) => {
   isScrolling.value = true;
   clearTimeout(scrollTimer);
-  scrollTimer = setTimeout(() => {
+  scrollTimer = window.setTimeout(() => {
     isScrolling.value = false;
   }, 1000);
   scrollOffset.value = event.target.scrollTop;
@@ -249,7 +249,7 @@ const renderPDFWithDebounce = () => {
   }
   cancelRendering.value = true;
   clearTimeout(timer);
-  timer = setTimeout(() => {
+  timer = window.setTimeout(() => {
     renderComplete.value && renderPDF();
   }, 500);
 };

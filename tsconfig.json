@@ -14,6 +14,6 @@
     "declarationDir": "./dist/types",
     "baseUrl": "."
   },
-  "include": ["env.d.ts", "src/**/*",  "src/**/*.vue"],
-  "exclude": ["node_modules", "src/**/__tests__/*"]
+  "include": ["env.d.ts", "src/index.ts",  "src/components/pdf-vue3.vue"],
+  "exclude": ["node_modules", "public", "src/**/__tests__/*"]
 }

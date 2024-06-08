@@ -5,7 +5,7 @@ import { resolve } from 'path';
 import { defineConfig } from 'vite';
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [
     vue()
   ],
@@ -14,6 +14,7 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
   },
+  publicDir: command === 'build' ? false : 'public',
   build: {
     target: ['esnext', 'es2022'],
     lib: {
@@ -39,4 +40,4 @@ export default defineConfig({
       target: "es2022",
     }
   }
-})
+}))

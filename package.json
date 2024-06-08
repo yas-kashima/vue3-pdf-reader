@@ -34,8 +34,7 @@
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore"
   },
   "dependencies": {
-    "pdfjs-dist": "^4.2.67",
-    "vue": "^3.4.21"
+    "pdfjs-dist": "^4.2.67"
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.8.0",
@@ -53,6 +52,7 @@
     "typescript": "~5.4.0",
     "vite": "^5.2.8",
     "vitest": "^1.4.0",
+    "vue": "^3.4.21",
     "vue-router": "^4.3.0",
     "vue-tsc": "^2.0.11"
   },

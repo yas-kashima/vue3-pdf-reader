@@ -11,7 +11,7 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "outDir": "./dist",
-    "declarationDir": "./dist/types",
+    "declarationDir": "./dist",
     "baseUrl": "."
   },
   "include": ["env.d.ts", "src/index.ts",  "src/components/pdf-vue3.vue"],

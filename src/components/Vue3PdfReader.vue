@@ -2,7 +2,7 @@
 import { GlobalWorkerOptions, getDocument } from 'pdfjs-dist';
 import pdfJSWorkerURL from "pdfjs-dist/build/pdf.worker?url";
 import type { PDFDocumentProxy } from "pdfjs-dist/types/src/pdf";
-import { computed, onBeforeMount, onUnmounted, ref, watch, type Ref } from "vue";
+import { computed, onBeforeMount, onMounted, onUnmounted, ref, watch, type Ref } from "vue";
 
 const dpr = ref(1);
 
@@ -302,6 +302,10 @@ defineExpose({
   },
 });
 
+onMounted(() => {
+  backToTop();
+});
+
 onUnmounted(() => {
   clearTimeout(timer);
   clearTimeout(scrollTimer);
@@ -370,21 +374,21 @@ watch(
 
 <template>
   <div
-    class="pdf-vue3-main"
+    id="vue3-pdf-reader-main"
     style="height: 100%; position: relative; min-height: 10px"
   >
-    <div class="pdf-vue3-container" style="height: 100%">
+    <div id="pdf-vue3-container" style="height: 100%; padding-top: 6px;">
       <div
         ref="scroller"
-        class="pdf-vue3-scroller"
+        id="vue3-pdf-reader-scroller"
         style="height: 100%; overflow-y: auto"
         :style="{ maxHeight: `${viewportHeight}px` }"
         @scroll="handleScroll"
       >
         <div
-          class="pdf-vue3-canvas-container"
+          id="vue3-pdf-reader-canvas-container"
           ref="container"
-          style="margin: 0 auto"
+          style="margin: 0 auto; padding-top: 6px;"
           :style="{
             width: isNaN(Number(props.pdfWidth))
               ? props.pdfWidth
@@ -410,7 +414,7 @@ watch(
       </div>
     </div>
     <div
-      class="pdf-vue3-progress"
+      id="vue3-pdf-reader-progress"
       v-if="props.showProgress"
       style="
         position: absolute;
@@ -433,7 +437,7 @@ watch(
       ></div>
     </div>
     <div
-      class="pdf-vue3-pageTooltip"
+      id="vue3-pdf-reader-pageTooltip"
       v-if="props.showPageTooltip"
       style="
         position: absolute;
@@ -467,7 +471,7 @@ watch(
       </div>
     </div>
     <div
-      class="pdf-vue3-backToTopBtn"
+      id="vue3-pdf-reader-backToTopBtn"
       v-if="props.showBackToTopBtn"
       @click="backToTop"
       style="

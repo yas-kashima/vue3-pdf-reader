@@ -302,8 +302,16 @@ defineExpose({
   },
 });
 
+let waitToPageFun: Function | null = null;
+
 onMounted(() => {
-  backToTop();
+  if (renderComplete.value) {
+      scroller.value.scrollTo(0, 0);
+    } else {
+      waitToPageFun = () => {
+        scroller.value.scrollTo(0, 0);
+      };
+    }
 });
 
 onUnmounted(() => {
@@ -338,7 +346,7 @@ const backToTop = () => {
   cancelAnimationFrame(animFrameId);
   requestAnimationFrame(animateScroll);
 };
-let waitToPageFun: Function | null = null;
+
 watch(
   () => props.page,
   (page: number) => {

@@ -383,7 +383,7 @@ watch(
 <template>
   <div
     id="vue3-pdf-reader-main"
-    style="height: 100%; position: relative; min-height: 10px"
+    style="height: 100%; position: relative; min-height: 10px; max-height: 100dvh;"
   >
     <div id="pdf-vue3-container" style="height: 100%; padding-top: 6px;">
       <div

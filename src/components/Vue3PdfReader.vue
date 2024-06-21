@@ -385,12 +385,13 @@ watch(
     id="vue3-pdf-reader-main"
     style="height: 100%; position: relative; min-height: 10px; max-height: 100dvh;"
   >
-    <div id="vue3-pdf-reader-container" style="height: 100%;">
-      <div id="vue3-pdf-reader-toolbar" style="height: 32px;" class="vue3-pdf-reader-toolbar"></div>
+    <div v-show="renderComplete" id="vue3-pdf-reader-toolbar" style="height: 32px;" class="vue3-pdf-reader-toolbar">
+    </div>
+    <div id="vue3-pdf-reader-container" style="height: calc(100% - 32px);" class="vue3-pdf-reader-container">
       <div
         ref="scroller"
         id="vue3-pdf-reader-scroller"
-        style="height: calc(100% - 32px); overflow-y: auto"
+        style="height: 100%; overflow-y: auto"
         :style="{ maxHeight: `${viewportHeight}px` }"
         @scroll="handleScroll"
       >
@@ -539,7 +540,17 @@ watch(
 
 <style>
 .vue3-pdf-reader-toolbar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
   background-image: linear-gradient(to top, rgb(108, 117, 125), rgb(142, 142, 153), rgb(108, 117, 125));
   box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.15), inset 0 -1px 0 rgba(255, 255, 255, 0.05), 0 1px 0 rgba(0, 0, 0, 0.15), 0 1px 1px rgba(0, 0, 0, 0.1);
+}
+.vue3-pdf-reader-container {
+  position: relative;
+  left: 0;
+  top: 32px;
+  width: 100%;
 }
 </style>

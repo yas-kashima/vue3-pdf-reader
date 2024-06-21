@@ -29,7 +29,7 @@ const props = withDefaults(
     scrollThreshold?: number;
     pdfWidth?: string;
     rowGap?: number;
-    page?: number;
+    page?: number | '' | null;
     cMapUrl?: string;
   }>(),
   {
@@ -347,14 +347,30 @@ const backToTop = () => {
   requestAnimationFrame(animateScroll);
 };
 
+const changePage =  (target: EventTarget | null) => {
+  if (!target || !(target instanceof HTMLInputElement)) {
+    return;
+  }
+  const value = parseInt(target.value);
+  if (Number.isNaN(value) || value === currentPage.value) {
+    return;
+  }
+  if (!value || value < 1 || value > itemHeightList.value.length) {
+    // ページ番号が不正な場合は処理しない
+    return;
+  }
+  scroller.value.scrollTo(0, (itemHeightList.value[value - 2] ?? 0) + 2);
+}
+
 watch(
   () => props.page,
-  (page: number) => {
-    if (props.page === currentPage.value) {
+  (page: number | '' | null) => {
+    if (page === currentPage.value) {
       return;
     }
-    if (page > itemHeightList.value.length) {
-      page = itemHeightList.value.length;
+    if (!page || page < 1 || page > itemHeightList.value.length) {
+      // ページ番号が不正な場合は処理しない
+      return;
     }
     if (renderComplete.value) {
       scroller.value.scrollTo(0, (itemHeightList.value[page - 2] ?? 0) + 2);
@@ -383,9 +399,13 @@ watch(
 <template>
   <div
     id="vue3-pdf-reader-main"
-    style="height: 100%; position: relative; min-height: 10px"
+    style="height: 100%; position: relative; min-height: 10px; max-height: 100dvh;"
   >
-    <div id="pdf-vue3-container" style="height: 100%; padding-top: 6px;">
+    <div v-show="renderComplete" id="vue3-pdf-reader-toolbar" style="height: 32px; padding: 3px 4px" class="vue3-pdf-reader-toolbar">
+      <input type="number" style="width: 40px; text-align: right;" :value="currentPage" @input="changePage($event.target)" />
+      <span style="margin: 0 3px">of</span><span>{{ totalPages }}</span>
+    </div>
+    <div id="vue3-pdf-reader-container" style="height: calc(100% - 32px);" class="vue3-pdf-reader-container">
       <div
         ref="scroller"
         id="vue3-pdf-reader-scroller"
@@ -536,4 +556,21 @@ watch(
   </div>
 </template>
 
-<style></style>
+<style>
+.vue3-pdf-reader-toolbar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  background-image: linear-gradient(to top, rgb(108, 117, 125), rgb(142, 142, 153), rgb(108, 117, 125));
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.15), inset 0 -1px 0 rgba(255, 255, 255, 0.05), 0 1px 0 rgba(0, 0, 0, 0.15), 0 1px 1px rgba(0, 0, 0, 0.1);
+  font-family: "Avenir", Helvetica, Arial, sans-serif;
+  color: white;
+}
+.vue3-pdf-reader-container {
+  position: relative;
+  left: 0;
+  top: 32px;
+  width: 100%;
+}
+</style>

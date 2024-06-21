@@ -29,7 +29,7 @@ const props = withDefaults(
     scrollThreshold?: number;
     pdfWidth?: string;
     rowGap?: number;
-    page?: number;
+    page?: number | '' | null;
     cMapUrl?: string;
   }>(),
   {
@@ -347,14 +347,30 @@ const backToTop = () => {
   requestAnimationFrame(animateScroll);
 };
 
+const changePage =  (target: EventTarget | null) => {
+  if (!target || !(target instanceof HTMLInputElement)) {
+    return;
+  }
+  const value = parseInt(target.value);
+  if (Number.isNaN(value) || value === currentPage.value) {
+    return;
+  }
+  if (!value || value < 1 || value > itemHeightList.value.length) {
+    // ページ番号が不正な場合は処理しない
+    return;
+  }
+  scroller.value.scrollTo(0, (itemHeightList.value[value - 2] ?? 0) + 2);
+}
+
 watch(
   () => props.page,
-  (page: number) => {
-    if (props.page === currentPage.value) {
+  (page: number | '' | null) => {
+    if (page === currentPage.value) {
       return;
     }
-    if (page > itemHeightList.value.length) {
-      page = itemHeightList.value.length;
+    if (!page || page < 1 || page > itemHeightList.value.length) {
+      // ページ番号が不正な場合は処理しない
+      return;
     }
     if (renderComplete.value) {
       scroller.value.scrollTo(0, (itemHeightList.value[page - 2] ?? 0) + 2);
@@ -385,7 +401,8 @@ watch(
     id="vue3-pdf-reader-main"
     style="height: 100%; position: relative; min-height: 10px; max-height: 100dvh;"
   >
-    <div v-show="renderComplete" id="vue3-pdf-reader-toolbar" style="height: 32px;" class="vue3-pdf-reader-toolbar">
+    <div v-show="renderComplete" id="vue3-pdf-reader-toolbar" style="height: 32px; padding: 2px 4px" class="vue3-pdf-reader-toolbar">
+      <input type="number" style="width: 40px;" :value="currentPage" @input="changePage($event.target)" />
     </div>
     <div id="vue3-pdf-reader-container" style="height: calc(100% - 32px);" class="vue3-pdf-reader-container">
       <div

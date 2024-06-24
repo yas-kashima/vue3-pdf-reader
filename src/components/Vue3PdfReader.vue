@@ -347,7 +347,15 @@ const backToTop = () => {
   requestAnimationFrame(animateScroll);
 };
 
-const changePage =  (target: EventTarget | null) => {
+const changePage = (value: number) => {
+  if (!value || value < 1 || value > itemHeightList.value.length) {
+    // do not process if page number is invalid
+    return;
+  }
+  scroller.value.scrollTo(0, (itemHeightList.value[value - 2] ?? 0) + 2);
+}
+
+const changePageInput =  (target: EventTarget | null) => {
   if (!target || !(target instanceof HTMLInputElement)) {
     return;
   }
@@ -355,11 +363,21 @@ const changePage =  (target: EventTarget | null) => {
   if (Number.isNaN(value) || value === currentPage.value) {
     return;
   }
-  if (!value || value < 1 || value > itemHeightList.value.length) {
-    // do not process if page number is invalid
+  changePage(value);
+}
+
+const changeNextPage = () => {
+  if (currentPage.value >= itemHeightList.value.length) {
     return;
   }
-  scroller.value.scrollTo(0, (itemHeightList.value[value - 2] ?? 0) + 2);
+  changePage(currentPage.value + 1);
+}
+
+const changePreviousPage = () => {
+  if (currentPage.value <= 1) {
+    return;
+  }
+  changePage(currentPage.value - 1);
 }
 
 watch(
@@ -402,19 +420,19 @@ watch(
     style="height: 100%; position: relative; min-height: 10px; max-height: 100dvh;"
   >
     <div v-show="renderComplete" id="vue3-pdf-reader-toolbar" style="height: 32px; padding: 3px 4px" class="vue3-pdf-reader-toolbar">
-      <button class="vue3-pdf-reader-button">
+      <button class="vue3-pdf-reader-button" @click="changePreviousPage">
         <svg xmlns="http://www.w3.org/2000/svg" style="width: 18px; height: 18px;" viewBox="0 0 512 512">
           <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="48" d="M112 244l144-144 144 144M256 120v292"/>
         </svg>
       </button>
       <div class="vue3-pdf-reader-button-separater"></div>
-      <button class="vue3-pdf-reader-button">
+      <button class="vue3-pdf-reader-button" @click="changeNextPage">
         <svg xmlns="http://www.w3.org/2000/svg" style="width: 18px; height: 18px;" viewBox="0 0 512 512">
           <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="48" d="M112 268l144 144 144-144M256 392V100"/>
         </svg>
       </button>
-      <input type="number" style="width: 40px; text-align: right;" :value="currentPage" @input="changePage($event.target)" />
-      <span style="margin: 0 3px">of</span><span>{{ totalPages }}</span>
+      <input type="number" style="width: 40px; text-align: right;" :value="currentPage" @input="changePageInput($event.target)" />
+      <span style="margin: 0 3px">/</span><span>{{ totalPages }}</span>
     </div>
     <div id="vue3-pdf-reader-container" style="height: calc(100% - 32px);" class="vue3-pdf-reader-container">
       <div

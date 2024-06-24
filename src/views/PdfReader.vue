@@ -44,10 +44,6 @@ const handlePdfInit = (pdf: PDFDocumentProxy): any => {
       @on-page-change="handlePageChange"
     >
     </PDF>
-    <div class="tool-bar">
-      <p>Enter page number</p>
-      <input type="number" v-model="page" />
-    </div>
   </div>
 </template>
 

@@ -12,7 +12,7 @@ const handlePageChange = (newPage: number) => {
 };
 
 const resize = () => {
-  isMobile.value = window.innerWidth < 768;
+  isMobile.value = window.innerWidth < 1000;
 };
 
 watchEffect(() => {
@@ -34,20 +34,16 @@ const handlePdfInit = (pdf: PDFDocumentProxy): any => {
 </script>
 
 <template>
-  <div style="width: 100%">
+  <div :style="isMobile ? 'width: 100%' : 'width: 1000px'" style="height: 100dvh;">
     <PDF
       :page="page"
-      :pdf-width="isMobile ? '100%' : '768'"
+      :pdf-width="isMobile ? '100%' : '983'"
       :row-gap="isMobile ? 4 : 8"
       src="/dummy_1.pdf"
       @on-pdf-init="handlePdfInit"
       @on-page-change="handlePageChange"
     >
     </PDF>
-    <div class="tool-bar">
-      <p>Enter page number</p>
-      <input type="number" v-model="page" />
-    </div>
   </div>
 </template>
 

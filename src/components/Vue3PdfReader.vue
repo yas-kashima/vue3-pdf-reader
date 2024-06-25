@@ -4,6 +4,7 @@ import pdfJSWorkerURL from "pdfjs-dist/build/pdf.worker?url";
 import type { PDFDocumentProxy } from "pdfjs-dist/types/src/pdf";
 import { computed, onBeforeMount, onMounted, onUnmounted, ref, watch, type Ref } from "vue";
 
+const CSS_UNITS = 96.0 / 72.0;
 const dpr = ref(1);
 
 const props = withDefaults(
@@ -180,6 +181,7 @@ const renderPDF = async () => {
       var scale =
         ((canvas.parentNode as HTMLDivElement).clientWidth - 4) /
         viewport.width;
+      scale = 1 * CSS_UNITS;
       const context = canvas.getContext("2d");
       const scaledViewport = page.getViewport({ scale: scale * dpr.value });
       canvas.width = scaledViewport.width;
@@ -306,12 +308,12 @@ let waitToPageFun: Function | null = null;
 
 onMounted(() => {
   if (renderComplete.value) {
+    scroller.value.scrollTo(0, 0);
+  } else {
+    waitToPageFun = () => {
       scroller.value.scrollTo(0, 0);
-    } else {
-      waitToPageFun = () => {
-        scroller.value.scrollTo(0, 0);
-      };
-    }
+    };
+  }
 });
 
 onUnmounted(() => {
@@ -419,7 +421,7 @@ watch(
     id="vue3-pdf-reader-main"
     style="height: 100%; position: relative; min-height: 10px; max-height: 100dvh;"
   >
-    <div v-show="renderComplete" id="vue3-pdf-reader-toolbar" style="height: 32px; padding: 3px 4px" class="vue3-pdf-reader-toolbar">
+    <div id="vue3-pdf-reader-toolbar" style="height: 32px; padding: 3px 4px" class="vue3-pdf-reader-toolbar">
       <button class="vue3-pdf-reader-button" @click="changePreviousPage">
         <svg xmlns="http://www.w3.org/2000/svg" style="width: 18px; height: 18px;" viewBox="0 0 512 512">
           <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="48" d="M112 244l144-144 144 144M256 120v292"/>
@@ -434,11 +436,34 @@ watch(
       <input type="number" style="width: 40px; text-align: right;" :value="currentPage" @input="changePageInput($event.target)" />
       <span style="margin: 0 3px">/</span><span>{{ totalPages }}</span>
     </div>
+    <div
+      id="vue3-pdf-reader-progress"
+      v-if="props.showProgress"
+      style="
+        position: absolute;
+        left: 0;
+        top: 32px;
+        width: 100%;
+        user-select: none;
+        pointer-events: none;
+      "
+    >
+      <slot v-if="slots.progress" name="progress" :loadRatio="loadRatio"></slot>
+      <div
+        v-else
+        style="width: 0%; height: 4px; transition: all 0.2s"
+        :style="{
+          width: `${loadRatio}%`,
+          opacity: loadRatio < 100 ? '1' : '0',
+          backgroundColor: props.progressColor,
+        }"
+      ></div>
+    </div>
     <div id="vue3-pdf-reader-container" style="height: calc(100% - 32px);" class="vue3-pdf-reader-container">
       <div
         ref="scroller"
         id="vue3-pdf-reader-scroller"
-        style="height: 100%; overflow-y: auto"
+        style="height: 100%; overflow-y: auto; background-color: rgb(231, 231, 231);"
         :style="{ maxHeight: `${viewportHeight}px` }"
         @scroll="handleScroll"
       >
@@ -458,7 +483,6 @@ watch(
               box-shadow: #a9a9a9 0px 1px 3px 0px;
               margin-left: auto;
               margin-right: auto;
-              width: calc(100% - 4px);
             "
             :style="{
               marginBottom: `${rowGap}px`,
@@ -469,29 +493,6 @@ watch(
           ></canvas>
         </div>
       </div>
-    </div>
-    <div
-      id="vue3-pdf-reader-progress"
-      v-if="props.showProgress"
-      style="
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        user-select: none;
-        pointer-events: none;
-      "
-    >
-      <slot v-if="slots.progress" name="progress" :loadRatio="loadRatio"></slot>
-      <div
-        v-else
-        style="width: 0%; height: 4px; transition: all 0.2s"
-        :style="{
-          width: `${loadRatio}%`,
-          opacity: loadRatio < 100 ? '1' : '0',
-          backgroundColor: props.progressColor,
-        }"
-      ></div>
     </div>
     <div
       id="vue3-pdf-reader-pageTooltip"
@@ -587,9 +588,6 @@ watch(
 
 <style>
 .vue3-pdf-reader-toolbar {
-  position: absolute;
-  left: 0;
-  top: 0;
   width: 100%;
   background-image: linear-gradient(to top, rgb(108, 117, 125), rgb(142, 142, 153), rgb(108, 117, 125));
   box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.15), inset 0 -1px 0 rgba(255, 255, 255, 0.05), 0 1px 0 rgba(0, 0, 0, 0.15), 0 1px 1px rgba(0, 0, 0, 0.1);
@@ -597,9 +595,6 @@ watch(
   color: white;
 }
 .vue3-pdf-reader-container {
-  position: relative;
-  left: 0;
-  top: 32px;
   width: 100%;
 }
 .vue3-pdf-reader-button {

@@ -187,7 +187,7 @@ const renderPDF = async () => {
       canvas.width = scaledViewport.width;
       canvas.height = scaledViewport.height;
       itemHeightList.value[i] = calcH +=
-        scaledViewport.height / dpr.value + rowGap.value;
+        Math.trunc(scaledViewport.height / dpr.value + rowGap.value);
       page.render({
         canvasContext: context as CanvasRenderingContext2D,
         viewport: scaledViewport,
@@ -196,7 +196,7 @@ const renderPDF = async () => {
       console.error("Error rendering PDF:", error);
     }
     if (
-      props.page &&
+      props.page && props.page !== 1 &&
       (i === props.page - 1 ||
         (props.page > totalPages.value && i === totalPages.value - 1))
     ) {
@@ -304,18 +304,6 @@ defineExpose({
   },
 });
 
-let waitToPageFun: Function | null = null;
-
-onMounted(() => {
-  if (renderComplete.value) {
-    scroller.value.scrollTo(0, 0);
-  } else {
-    waitToPageFun = () => {
-      scroller.value.scrollTo(0, 0);
-    };
-  }
-});
-
 onUnmounted(() => {
   clearTimeout(timer);
   clearTimeout(scrollTimer);
@@ -381,6 +369,8 @@ const changePreviousPage = () => {
   }
   changePage(currentPage.value - 1);
 }
+
+let waitToPageFun: Function | null = null;
 
 watch(
   () => props.page,

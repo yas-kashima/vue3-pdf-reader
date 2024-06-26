@@ -7,7 +7,7 @@ import { computed, onBeforeMount, onUnmounted, ref, watch, type Ref } from "vue"
 const CSS_UNITS = 96.0 / 72.0;
 const dpr = ref(1);
 const scaleArray = [25, 33, 50, 67, 75, 80, 90, 100, 110, 125, 150, 175, 200, 250, 300, 400, 500];
-const scaleIndex = ref(7);
+const scaleValue = ref(100);
 
 const props = withDefaults(
   defineProps<{
@@ -180,7 +180,7 @@ const renderPDF = async () => {
       // let scale =
       //   ((canvas.parentNode as HTMLDivElement).clientWidth - 4) /
       //   viewport.width;
-      const scale = scaleArray[scaleIndex.value] * CSS_UNITS / 100;
+      const scale = scaleValue.value * CSS_UNITS / 100;
       const context = canvas.getContext("2d");
       const scaledViewport = page.getViewport({ scale: scale * dpr.value });
       canvas.width = scaledViewport.width;
@@ -370,12 +370,34 @@ const changePreviousPage = () => {
 }
 
 const scaleUp = () => {
-  scaleIndex.value = scaleIndex.value + 1;
+  for (var i = 0; i < scaleArray.length; i++) {
+    if (scaleArray[i] > scaleValue.value) {
+      scaleValue.value = scaleArray[i];
+      break;
+    }
+  }
   renderPDF();
 }
 
 const scaleDown = () => {
-  scaleIndex.value = scaleIndex.value - 1;
+  for (var i = scaleArray.length - 1; i >= 0; i--) {
+    if (scaleArray[i] < scaleValue.value) {
+      scaleValue.value = scaleArray[i];
+      break;
+    }
+  }
+  renderPDF();
+}
+
+const changeScaleInput = (target: EventTarget | null) => {
+  if (!target || !(target instanceof HTMLInputElement)) {
+    return;
+  }
+  const value = parseInt(target.value);
+  if (Number.isNaN(value) || value < scaleArray[0] || value > scaleArray[scaleArray.length - 1]) {
+    return;
+  }
+  scaleValue.value = value;
   renderPDF();
 }
 
@@ -448,6 +470,8 @@ watch(
             <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M400 256H112"/>
           </svg>
         </button>
+        <input type="number" style="width: 46px; text-align: right;" :value="scaleValue" @blur="changeScaleInput($event.target)" />
+        <span style="margin: 0 3px">%</span>
       </div>
     </div>
     <div

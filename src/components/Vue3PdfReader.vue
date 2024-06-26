@@ -2,10 +2,12 @@
 import { GlobalWorkerOptions, getDocument } from 'pdfjs-dist';
 import pdfJSWorkerURL from "pdfjs-dist/build/pdf.worker?url";
 import type { PDFDocumentProxy } from "pdfjs-dist/types/src/pdf";
-import { computed, onBeforeMount, onMounted, onUnmounted, ref, watch, type Ref } from "vue";
+import { computed, onBeforeMount, onUnmounted, ref, watch, type Ref } from "vue";
 
 const CSS_UNITS = 96.0 / 72.0;
 const dpr = ref(1);
+const scaleArray = [25, 33, 50, 67, 75, 80, 90, 100, 110, 125, 150, 175, 200, 250, 300, 400, 500];
+const scaleIndex = ref(7);
 
 const props = withDefaults(
   defineProps<{
@@ -177,11 +179,11 @@ const renderPDF = async () => {
       }
       // ----
       const canvas = canvasRefs.value[i].value[0];
-      var viewport = page.getViewport({ scale: 1 });
-      var scale =
-        ((canvas.parentNode as HTMLDivElement).clientWidth - 4) /
-        viewport.width;
-      scale = 1 * CSS_UNITS;
+      // const viewport = page.getViewport({ scale: 1 });
+      // let scale =
+      //   ((canvas.parentNode as HTMLDivElement).clientWidth - 4) /
+      //   viewport.width;
+      const scale = scaleArray[scaleIndex.value] * CSS_UNITS / 100;
       const context = canvas.getContext("2d");
       const scaledViewport = page.getViewport({ scale: scale * dpr.value });
       canvas.width = scaledViewport.width;
@@ -370,6 +372,16 @@ const changePreviousPage = () => {
   changePage(currentPage.value - 1);
 }
 
+const scaleUp = () => {
+  scaleIndex.value = scaleIndex.value + 1;
+  renderPDF();
+}
+
+const scaleDown = () => {
+  scaleIndex.value = scaleIndex.value - 1;
+  renderPDF();
+}
+
 let waitToPageFun: Function | null = null;
 
 watch(
@@ -412,19 +424,34 @@ watch(
     style="height: 100%; position: relative; min-height: 10px; max-height: 100dvh;"
   >
     <div id="vue3-pdf-reader-toolbar" style="height: 32px; padding: 3px 4px" class="vue3-pdf-reader-toolbar">
-      <button class="vue3-pdf-reader-button" @click="changePreviousPage">
-        <svg xmlns="http://www.w3.org/2000/svg" style="width: 18px; height: 18px;" viewBox="0 0 512 512">
-          <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="48" d="M112 244l144-144 144 144M256 120v292"/>
-        </svg>
-      </button>
-      <div class="vue3-pdf-reader-button-separater"></div>
-      <button class="vue3-pdf-reader-button" @click="changeNextPage">
-        <svg xmlns="http://www.w3.org/2000/svg" style="width: 18px; height: 18px;" viewBox="0 0 512 512">
-          <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="48" d="M112 268l144 144 144-144M256 392V100"/>
-        </svg>
-      </button>
-      <input type="number" style="width: 40px; text-align: right;" :value="currentPage" @input="changePageInput($event.target)" />
-      <span style="margin: 0 3px">/</span><span>{{ totalPages }}</span>
+      <div class="vue3-pdf-reader-toolbar-left">
+        <button class="vue3-pdf-reader-button" @click="changePreviousPage">
+          <svg xmlns="http://www.w3.org/2000/svg" style="width: 18px; height: 18px;" viewBox="0 0 512 512">
+            <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="48" d="M112 244l144-144 144 144M256 120v292"/>
+          </svg>
+        </button>
+        <div class="vue3-pdf-reader-button-separater"></div>
+        <button class="vue3-pdf-reader-button" @click="changeNextPage">
+          <svg xmlns="http://www.w3.org/2000/svg" style="width: 18px; height: 18px;" viewBox="0 0 512 512">
+            <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="48" d="M112 268l144 144 144-144M256 392V100"/>
+          </svg>
+        </button>
+        <input type="number" style="width: 46px; text-align: right;" :value="currentPage" @blur="changePageInput($event.target)" />
+        <span style="margin: 0 3px">/</span><span>{{ totalPages }}</span>
+      </div>
+      <div class="vue3-pdf-reader-toolbar-middle">
+        <button class="vue3-pdf-reader-button" @click="scaleUp">
+          <svg xmlns="http://www.w3.org/2000/svg" style="width: 18px; height: 18px;" viewBox="0 0 512 512">
+            <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M256 112v288M400 256H112"/>
+          </svg>
+        </button>
+        <div class="vue3-pdf-reader-button-separater"></div>
+        <button class="vue3-pdf-reader-button" @click="scaleDown">
+          <svg xmlns="http://www.w3.org/2000/svg" style="width: 18px; height: 18px;" viewBox="0 0 512 512">
+            <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M400 256H112"/>
+          </svg>
+        </button>
+      </div>
     </div>
     <div
       id="vue3-pdf-reader-progress"
@@ -584,6 +611,14 @@ watch(
   font-family: "Avenir", Helvetica, Arial, sans-serif;
   color: white;
 }
+.vue3-pdf-reader-toolbar-left {
+  float: left;
+}
+.vue3-pdf-reader-toolbar-middle {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
 .vue3-pdf-reader-container {
   width: 100%;
 }
@@ -601,7 +636,7 @@ watch(
   color: rgb(141, 208, 255);
 }
 .vue3-pdf-reader-button-separater {
-  background-color: black;
+  background-color: rgb(75, 75, 75);
   padding: 8px 0;
   width: 1px;
   display: inline-block;

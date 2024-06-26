@@ -27,7 +27,6 @@ const props = withDefaults(
     // --custom--
     showProgress?: boolean;
     progressColor?: string;
-    showPageTooltip?: boolean;
     showBackToTopBtn?: boolean;
     scrollThreshold?: number;
     pdfWidth?: string;
@@ -48,7 +47,6 @@ const props = withDefaults(
     disableAutoFetch: undefined,
     showProgress: true,
     progressColor: "#87ceeb",
-    showPageTooltip: true,
     showBackToTopBtn: true,
     scrollThreshold: 300,
     pdfWidth: "100%",
@@ -73,7 +71,6 @@ const emit = defineEmits<{
 
 const slots = defineSlots<{
   progress?: (props: { loadRatio: number }) => any;
-  pageTooltip?: (props: { currentPage: number; totalPages: number }) => any;
   backToTopBtn?: (props: { scrollOffset: number }) => any;
 }>();
 
@@ -509,40 +506,6 @@ watch(
             :ref="canvasRefs[item - 1]"
           ></canvas>
         </div>
-      </div>
-    </div>
-    <div
-      id="vue3-pdf-reader-pageTooltip"
-      v-if="props.showPageTooltip"
-      style="
-        position: absolute;
-        left: 12px;
-        top: 12px;
-        width: calc(100% - 12px);
-        user-select: none;
-        pointer-events: none;
-      "
-    >
-      <slot
-        v-if="slots.pageTooltip"
-        name="pageTooltip"
-        :currentPage="currentPage"
-        :totalPages="totalPages"
-      ></slot>
-      <div
-        v-else
-        style="
-          padding: 4px 8px;
-          background: rgba(0, 0, 0, 0.5);
-          color: #ffffff;
-          font-size: 16px;
-          border-radius: 6px;
-          display: inline-block;
-          transition: opacity 0.3s;
-        "
-        :style="{ opacity: isScrolling && totalPages > 0 ? '1' : '0' }"
-      >
-        {{ currentPage }}/{{ totalPages }}
       </div>
     </div>
     <div

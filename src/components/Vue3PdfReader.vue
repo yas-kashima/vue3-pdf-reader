@@ -401,6 +401,23 @@ const changeScaleInput = (target: EventTarget | null) => {
   renderPDF();
 }
 
+const fileDownload = async () => {
+  const data = await pdf.getData();
+  const a = document.createElement("a");
+  const contentType = "application/pdf";
+  const blob = new Blob([data], {type: contentType});
+  const url = URL.createObjectURL(blob);
+  a.href = url;
+  a.download = "";
+  a.click();
+  // If you delete it immediately, an error will occur in Safari, so wait.
+  await new Promise((resolve) => setTimeout(resolve, 1000)).then(() => {
+    // Destroy object URL
+    URL.revokeObjectURL(url);
+    a.remove();
+  });
+}
+
 let waitToPageFun: Function | null = null;
 
 watch(
@@ -442,7 +459,7 @@ watch(
     id="vue3-pdf-reader-main"
     style="height: 100%; position: relative; min-height: 10px; max-height: 100dvh;"
   >
-    <div id="vue3-pdf-reader-toolbar" style="height: 32px; padding: 3px 4px" class="vue3-pdf-reader-toolbar">
+    <div id="vue3-pdf-reader-toolbar" style="height: 38px; padding: 6px 8px" class="vue3-pdf-reader-toolbar">
       <div class="vue3-pdf-reader-toolbar-left">
         <button class="vue3-pdf-reader-button" @click="changePreviousPage">
           <svg xmlns="http://www.w3.org/2000/svg" style="width: 18px; height: 18px;" viewBox="0 0 512 512">
@@ -460,18 +477,26 @@ watch(
       </div>
       <div class="vue3-pdf-reader-toolbar-middle">
         <button class="vue3-pdf-reader-button" @click="scaleUp">
-          <svg xmlns="http://www.w3.org/2000/svg" style="width: 18px; height: 18px;" viewBox="0 0 512 512">
+          <svg xmlns="http://www.w3.org/2000/svg" style="width: 20px; height: 20px;" viewBox="0 0 512 512">
             <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M256 112v288M400 256H112"/>
           </svg>
         </button>
         <div class="vue3-pdf-reader-button-separater"></div>
         <button class="vue3-pdf-reader-button" @click="scaleDown">
-          <svg xmlns="http://www.w3.org/2000/svg" style="width: 18px; height: 18px;" viewBox="0 0 512 512">
+          <svg xmlns="http://www.w3.org/2000/svg" style="width: 20px; height: 20px;" viewBox="0 0 512 512">
             <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M400 256H112"/>
           </svg>
         </button>
         <input type="number" style="width: 46px; text-align: right;" :value="scaleValue" @blur="changeScaleInput($event.target)" />
         <span style="margin: 0 3px">%</span>
+      </div>
+      <div class="vue3-pdf-reader-toolbar-right" @click="fileDownload">
+        <button class="vue3-pdf-reader-button">
+          <svg xmlns="http://www.w3.org/2000/svg" style="width: 22px; height: 22px;" viewBox="0 0 512 512">
+            <path d="M336 176h40a40 40 0 0140 40v208a40 40 0 01-40 40H136a40 40 0 01-40-40V216a40 40 0 0140-40h40" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/>
+            <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M176 272l80 80 80-80M256 48v288"/>
+          </svg>
+        </button>
       </div>
     </div>
     <div
@@ -569,21 +594,11 @@ watch(
           display: flex;
           justify-content: center;
           align-items: center;
+          cursor: pointer;
         "
       >
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            fill-rule="evenodd"
-            clip-rule="evenodd"
-            d="M11.0001 22.2877H13.0001V7.80237L16.2428 11.045L17.657 9.63079L12.0001 3.97394L6.34326 9.63079L7.75748 11.045L11.0001 7.80236V22.2877ZM18 3H6V1H18V3Z"
-            fill="currentColor"
-          />
+        <svg xmlns="http://www.w3.org/2000/svg" style="width: 24px; height: 24px;" viewBox="0 0 512 512">
+          <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="48" d="M112 328l144-144 144 144"/>
         </svg>
       </div>
     </div>
@@ -605,6 +620,9 @@ watch(
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
+}
+.vue3-pdf-reader-toolbar-right {
+  float: right;
 }
 .vue3-pdf-reader-container {
   width: 100%;

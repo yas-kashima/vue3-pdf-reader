@@ -401,6 +401,23 @@ const changeScaleInput = (target: EventTarget | null) => {
   renderPDF();
 }
 
+const fileDownload = async () => {
+  const data = await pdf.getData();
+  const a = document.createElement("a");
+  const contentType = "application/pdf";
+  const blob = new Blob([data], {type: contentType});
+  const url = URL.createObjectURL(blob);
+  a.href = url;
+  a.download = "";
+  a.click();
+  // If you delete it immediately, an error will occur in Safari, so wait.
+  await new Promise((resolve) => setTimeout(resolve, 1000)).then(() => {
+    // Destroy object URL
+    URL.revokeObjectURL(url);
+    a.remove();
+  });
+}
+
 let waitToPageFun: Function | null = null;
 
 watch(
@@ -473,7 +490,7 @@ watch(
         <input type="number" style="width: 46px; text-align: right;" :value="scaleValue" @blur="changeScaleInput($event.target)" />
         <span style="margin: 0 3px">%</span>
       </div>
-      <div class="vue3-pdf-reader-toolbar-right">
+      <div class="vue3-pdf-reader-toolbar-right" @click="fileDownload">
         <button class="vue3-pdf-reader-button">
           <svg xmlns="http://www.w3.org/2000/svg" style="width: 22px; height: 22px;" viewBox="0 0 512 512">
             <path d="M336 176h40a40 40 0 0140 40v208a40 40 0 01-40 40H136a40 40 0 01-40-40V216a40 40 0 0140-40h40" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/>

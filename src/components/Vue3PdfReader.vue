@@ -15,6 +15,7 @@ const props = withDefaults(
      * pdf url | Uint8Array | BASE64
      */
     src: string | Uint8Array;
+    downloadFileName?: string;
     httpHeaders?: Record<string, any>;
     withCredentials?: boolean;
     password?: string;
@@ -36,6 +37,7 @@ const props = withDefaults(
   }>(),
   {
     src: undefined,
+    downloadFileNamee: undefined,
     httpHeaders: undefined,
     withCredentials: undefined,
     password: undefined,
@@ -408,7 +410,11 @@ const fileDownload = async () => {
   const blob = new Blob([data], {type: contentType});
   const url = URL.createObjectURL(blob);
   a.href = url;
-  a.download = "";
+  if (props.downloadFileName) {
+    a.download = props.downloadFileName;
+  } else {
+    a.download = "download.pdf"
+  }
   a.click();
   // If you delete it immediately, an error will occur in Safari, so wait.
   await new Promise((resolve) => setTimeout(resolve, 1000)).then(() => {

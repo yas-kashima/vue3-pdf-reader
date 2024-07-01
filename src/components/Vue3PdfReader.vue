@@ -4,6 +4,7 @@ import pdfJSWorkerURL from "pdfjs-dist/build/pdf.worker?url";
 import type { PDFDocumentProxy } from "pdfjs-dist/types/src/pdf";
 import { computed, onBeforeMount, onUnmounted, ref, watch, type Ref } from "vue";
 
+const RENDER_RANGE = 3;
 const CSS_UNITS = 96.0 / 72.0;
 const dpr = ref(1);
 const scaleArray = [25, 33, 50, 67, 75, 80, 90, 100, 110, 125, 150, 175, 200, 250, 300, 400, 500];
@@ -148,8 +149,44 @@ const scroller = ref<HTMLDivElement>() as Ref<HTMLDivElement>;
 const container = ref<HTMLDivElement>() as Ref<HTMLDivElement>;
 
 let pdf: PDFDocumentProxy;
-const cancelRendering = ref(false);
 const renderComplete = ref(false);
+const renderedPages = ref<Array<boolean>>([]);
+
+const renderPDFPages = async () => {
+  let rangeStart = currentPage.value - (RENDER_RANGE - 1) / 2;
+  let rangeEnd = currentPage.value + (RENDER_RANGE - 1) / 2;
+
+  if (rangeStart < 1) {
+    rangeEnd = rangeEnd - rangeStart + 1
+    rangeStart = 1;
+  } else if (rangeEnd >= totalPages.value) {
+    rangeStart = rangeStart + totalPages.value - rangeEnd - 1;
+    rangeEnd = totalPages.value - 1;
+  }
+
+  if (totalPages.value < RENDER_RANGE) {
+    rangeStart = 1;
+    rangeEnd = totalPages.value;
+  }
+
+  for (let i = rangeStart - 1; i < rangeEnd; i++) {
+    if (!renderedPages.value[i]) {
+      const page = await pdf.getPage(i + 1);
+      const canvas = canvasRefs.value[i].value[0];
+      const scale = scaleValue.value * CSS_UNITS / 100;
+      const context = canvas.getContext("2d");
+      const scaledViewport = page.getViewport({ scale: scale * dpr.value });
+      canvas.width = scaledViewport.width;
+      canvas.height = scaledViewport.height;
+      page.render({
+        canvasContext: context as CanvasRenderingContext2D,
+        viewport: scaledViewport,
+      });
+      renderedPages.value[i] = true;
+    }
+  }
+}
+
 const renderPDF = async () => {
   renderComplete.value = false;
   try {
@@ -170,32 +207,22 @@ const renderPDF = async () => {
   for (let i = 0; i < totalPages.value; i++) {
     try {
       const page = await pdf.getPage(i + 1);
-      // ----
-      if (cancelRendering.value) {
-        cancelRendering.value = false;
-        renderPDF();
-        break;
-      }
-      // ----
       const canvas = canvasRefs.value[i].value[0];
       // const viewport = page.getViewport({ scale: 1 });
       // let scale =
       //   ((canvas.parentNode as HTMLDivElement).clientWidth - 4) /
       //   viewport.width;
       const scale = scaleValue.value * CSS_UNITS / 100;
-      const context = canvas.getContext("2d");
       const scaledViewport = page.getViewport({ scale: scale * dpr.value });
       canvas.width = scaledViewport.width;
       canvas.height = scaledViewport.height;
       itemHeightList.value[i] = calcH +=
         Math.trunc(scaledViewport.height / dpr.value + rowGap.value);
-      page.render({
-        canvasContext: context as CanvasRenderingContext2D,
-        viewport: scaledViewport,
-      });
+      renderedPages.value[i] = false;
     } catch (error) {
       console.error("Error rendering PDF:", error);
     }
+
     if (
       props.page && props.page !== 1 &&
       (i === props.page - 1 ||
@@ -207,6 +234,7 @@ const renderPDF = async () => {
       renderComplete.value = true;
     }
   }
+  renderPDFPages();
 };
 
 const viewportHeight = ref(0);
@@ -250,7 +278,6 @@ const renderPDFWithDebounce = () => {
     setWidth();
     return;
   }
-  cancelRendering.value = true;
   clearTimeout(timer);
   timer = window.setTimeout(() => {
     renderComplete.value && renderPDF();
@@ -456,6 +483,7 @@ watch(
   () => currentPage.value,
   (page: number) => {
     emit("onPageChange", page);
+    renderPDFPages();
   }
 );
 </script>

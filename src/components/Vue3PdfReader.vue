@@ -238,15 +238,19 @@ const renderPDF = async () => {
 };
 
 const viewportHeight = ref(0);
-const isScrolling = ref(false);
 
-let scrollTimer: number;
-const handleScroll = (event: any) => {
-  isScrolling.value = true;
-  clearTimeout(scrollTimer);
-  scrollTimer = window.setTimeout(() => {
-    isScrolling.value = false;
-  }, 1000);
+const debounce = <T extends (...args: any[]) => unknown>(
+  callback: T,
+  delay = 200,
+): ((...args: Parameters<T>) => void) => {
+  let timeoutId: string | number | NodeJS.Timeout | undefined;
+  return (...args) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => callback(...args), delay);
+  }
+}
+
+const handleScroll = debounce((event: any) => {
   scrollOffset.value = event.target.scrollTop;
   emit("onScroll", event.target.scrollTop);
   if (
@@ -264,7 +268,7 @@ const handleScroll = (event: any) => {
       break;
     }
   }
-};
+});
 
 let timer: number;
 const renderPDFWithDebounce = () => {
@@ -334,7 +338,6 @@ defineExpose({
 
 onUnmounted(() => {
   clearTimeout(timer);
-  clearTimeout(scrollTimer);
   cancelAnimationFrame(animFrameId);
   isAddEvent.value &&
     window.removeEventListener("resize", renderPDFWithDebounce);

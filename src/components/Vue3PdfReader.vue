@@ -4,7 +4,7 @@ import pdfJSWorkerURL from "pdfjs-dist/build/pdf.worker?url";
 import type { PDFDocumentProxy } from "pdfjs-dist/types/src/pdf";
 import { computed, onBeforeMount, onUnmounted, ref, watch, type Ref } from "vue";
 
-const RENDER_RANGE = 3;
+const RENDER_RANGE = 5;
 const CSS_UNITS = 96.0 / 72.0;
 const dpr = ref(1);
 const scaleArray = [25, 33, 50, 67, 75, 80, 90, 100, 110, 125, 150, 175, 200, 250, 300, 400, 500];
@@ -152,7 +152,25 @@ let pdf: PDFDocumentProxy;
 const renderComplete = ref(false);
 const renderedPages = ref<Array<boolean>>([]);
 
+const renderPDFPage = async (index: number) => {
+  if (!renderedPages.value[index]) {
+    const page = await pdf.getPage(index + 1);
+    const canvas = canvasRefs.value[index].value[0];
+    const scale = scaleValue.value * CSS_UNITS / 100;
+    const context = canvas.getContext("2d");
+    const scaledViewport = page.getViewport({ scale: scale * dpr.value });
+    canvas.width = scaledViewport.width;
+    canvas.height = scaledViewport.height;
+    page.render({
+      canvasContext: context as CanvasRenderingContext2D,
+      viewport: scaledViewport,
+    });
+    renderedPages.value[index] = true;
+  }
+};
+
 const renderPDFPages = async () => {
+  const current = currentPage.value;
   let rangeStart = currentPage.value - (RENDER_RANGE - 1) / 2;
   let rangeEnd = currentPage.value + (RENDER_RANGE - 1) / 2;
 
@@ -169,21 +187,12 @@ const renderPDFPages = async () => {
     rangeEnd = totalPages.value;
   }
 
-  for (let i = rangeStart - 1; i < rangeEnd; i++) {
-    if (!renderedPages.value[i]) {
-      const page = await pdf.getPage(i + 1);
-      const canvas = canvasRefs.value[i].value[0];
-      const scale = scaleValue.value * CSS_UNITS / 100;
-      const context = canvas.getContext("2d");
-      const scaledViewport = page.getViewport({ scale: scale * dpr.value });
-      canvas.width = scaledViewport.width;
-      canvas.height = scaledViewport.height;
-      page.render({
-        canvasContext: context as CanvasRenderingContext2D,
-        viewport: scaledViewport,
-      });
-      renderedPages.value[i] = true;
-    }
+  for (let i = current - 1; i < rangeEnd; i++) {
+    renderPDFPage(i);
+  }
+
+  for (let i = current - 2; i >= rangeStart - 1; i--) {
+    renderPDFPage(i);
   }
 }
 
@@ -208,10 +217,6 @@ const renderPDF = async () => {
     try {
       const page = await pdf.getPage(i + 1);
       const canvas = canvasRefs.value[i].value[0];
-      // const viewport = page.getViewport({ scale: 1 });
-      // let scale =
-      //   ((canvas.parentNode as HTMLDivElement).clientWidth - 4) /
-      //   viewport.width;
       const scale = scaleValue.value * CSS_UNITS / 100;
       const scaledViewport = page.getViewport({ scale: scale * dpr.value });
       canvas.width = scaledViewport.width;
@@ -421,6 +426,25 @@ const scaleDown = () => {
   renderPDF();
 }
 
+const scaleFitWidth = async () => {
+  const page = await pdf.getPage(currentPage.value);
+  const canvas = canvasRefs.value[currentPage.value - 1].value[0];
+  const viewport = page.getViewport({ scale: 1 });
+  scaleValue.value =
+    Math.floor(((canvas.parentNode as HTMLDivElement).clientWidth - 4) /
+    viewport.width / CSS_UNITS * 100);
+  renderPDF();
+}
+
+const scaleFitHeight = async () => {
+  const page = await pdf.getPage(currentPage.value);
+  const viewport = page.getViewport({ scale: 1 });
+  scaleValue.value =
+    Math.floor((scroller.value.clientHeight - 4) /
+    viewport.height / CSS_UNITS * 100);
+  renderPDF();
+}
+
 const changeScaleInput = (target: EventTarget | null) => {
   if (!target || !(target instanceof HTMLInputElement)) {
     return;
@@ -525,7 +549,20 @@ watch(
           </svg>
         </button>
         <input type="number" style="width: 46px; text-align: right;" :value="scaleValue" @blur="changeScaleInput($event.target)" />
-        <span style="margin: 0 3px">%</span>
+        <span style="margin: 0 6px 0 3px">%</span>
+        <button class="vue3-pdf-reader-button" @click="scaleFitWidth">
+          <svg style="width: 20px; height: 20px;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill="currentColor" d="M16.1359 18.2928C16.5264 18.6833 17.1596 18.6833 17.5501 18.2928L22.4375 13.4006C23.2179 12.6194 23.2176 11.3536 22.4369 10.5728L17.5465 5.68247C17.156 5.29195 16.5228 5.29195 16.1323 5.68247C15.7418 6.073 15.7418 6.70616 16.1323 7.09669L20.3179 11.2823C20.7085 11.6729 20.7085 12.306 20.3179 12.6965L16.1359 16.8786C15.7454 17.2691 15.7454 17.9023 16.1359 18.2928Z"/>
+            <path fill="currentColor" d="M7.88675 5.68247C7.49623 5.29195 6.86307 5.29195 6.47254 5.68247L1.58509 10.5747C0.804698 11.3559 0.805008 12.6217 1.58579 13.4024L6.47615 18.2928C6.86667 18.6833 7.49984 18.6833 7.89036 18.2928C8.28089 17.9023 8.28089 17.2691 7.89036 16.8786L3.70471 12.6929C3.31419 12.3024 3.31419 11.6692 3.70472 11.2787L7.88675 7.09669C8.27728 6.70616 8.27728 6.073 7.88675 5.68247Z"/>
+          </svg>
+        </button>
+        <div class="vue3-pdf-reader-button-separater"></div>
+        <button class="vue3-pdf-reader-button" @click="scaleFitHeight">
+          <svg style="width: 20px; height: 20px;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill="currentColor" d="M5.70711 16.1359C5.31659 16.5264 5.31659 17.1596 5.70711 17.5501L10.5993 22.4375C11.3805 23.2179 12.6463 23.2176 13.4271 22.4369L18.3174 17.5465C18.708 17.156 18.708 16.5228 18.3174 16.1323C17.9269 15.7418 17.2937 15.7418 16.9032 16.1323L12.7176 20.3179C12.3271 20.7085 11.6939 20.7085 11.3034 20.3179L7.12132 16.1359C6.7308 15.7454 6.09763 15.7454 5.70711 16.1359Z"/>
+            <path fill="currentColor" d="M18.3174 7.88675C18.708 7.49623 18.708 6.86307 18.3174 6.47254L13.4252 1.58509C12.644 0.804698 11.3783 0.805008 10.5975 1.58579L5.70711 6.47615C5.31658 6.86667 5.31658 7.49984 5.70711 7.89036C6.09763 8.28089 6.7308 8.28089 7.12132 7.89036L11.307 3.70472C11.6975 3.31419 12.3307 3.31419 12.7212 3.70472L16.9032 7.88675C17.2937 8.27728 17.9269 8.27728 18.3174 7.88675Z"/>
+          </svg>
+        </button>
       </div>
       <div class="vue3-pdf-reader-toolbar-right" @click="fileDownload">
         <button class="vue3-pdf-reader-button">
@@ -668,8 +705,8 @@ watch(
   color: white;
   background-color: inherit;
   border-style: hidden;
-  width: 22px;
-  height: 22px;
+  width: 26px;
+  height: 26px;
   padding: 0 2px;
   vertical-align: middle;
   cursor: pointer;

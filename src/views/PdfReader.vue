@@ -39,7 +39,7 @@ const handlePdfInit = (pdf: PDFDocumentProxy): any => {
       :page="page"
       :pdf-width="isMobile ? '100%' : '983'"
       :row-gap="isMobile ? 4 : 8"
-      src="/dummy_1.pdf"
+      src="/200MB-TESTFILE.ORG.pdf"
       @on-pdf-init="handlePdfInit"
       @on-page-change="handlePageChange"
     >

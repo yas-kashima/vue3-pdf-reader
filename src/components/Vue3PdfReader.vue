@@ -9,6 +9,7 @@ const CSS_UNITS = 96.0 / 72.0;
 const dpr = ref(1);
 const scaleArray = [25, 33, 50, 67, 75, 80, 90, 100, 110, 125, 150, 175, 200, 250, 300, 400, 500];
 const scaleValue = ref(100);
+const rotation = ref(0);
 
 const props = withDefaults(
   defineProps<{
@@ -158,7 +159,7 @@ const renderPDFPage = async (index: number) => {
     const canvas = canvasRefs.value[index].value[0];
     const scale = scaleValue.value * CSS_UNITS / 100;
     const context = canvas.getContext("2d");
-    const scaledViewport = page.getViewport({ scale: scale * dpr.value });
+    const scaledViewport = page.getViewport({ scale: scale * dpr.value, rotation: rotation.value });
     canvas.width = scaledViewport.width;
     canvas.height = scaledViewport.height;
     page.render({
@@ -218,7 +219,7 @@ const renderPDF = async () => {
       const page = await pdf.getPage(i + 1);
       const canvas = canvasRefs.value[i].value[0];
       const scale = scaleValue.value * CSS_UNITS / 100;
-      const scaledViewport = page.getViewport({ scale: scale * dpr.value });
+      const scaledViewport = page.getViewport({ scale: scale * dpr.value, rotation: rotation.value });
       canvas.width = scaledViewport.width;
       canvas.height = scaledViewport.height;
       itemHeightList.value[i] = calcH +=
@@ -429,7 +430,7 @@ const scaleDown = () => {
 const scaleFitWidth = async () => {
   const page = await pdf.getPage(currentPage.value);
   const canvas = canvasRefs.value[currentPage.value - 1].value[0];
-  const viewport = page.getViewport({ scale: 1 });
+  const viewport = page.getViewport({ scale: 1, rotation: rotation.value });
   scaleValue.value =
     Math.floor(((canvas.parentNode as HTMLDivElement).clientWidth - 4) /
     viewport.width / CSS_UNITS * 100);
@@ -438,7 +439,7 @@ const scaleFitWidth = async () => {
 
 const scaleFitHeight = async () => {
   const page = await pdf.getPage(currentPage.value);
-  const viewport = page.getViewport({ scale: 1 });
+  const viewport = page.getViewport({ scale: 1, rotation: rotation.value });
   scaleValue.value =
     Math.floor((scroller.value.clientHeight - 4) /
     viewport.height / CSS_UNITS * 100);
@@ -454,6 +455,17 @@ const changeScaleInput = (target: EventTarget | null) => {
     return;
   }
   scaleValue.value = value;
+  renderPDF();
+}
+
+const changeRotation = async () => {
+  let rot = rotation.value;
+  rot += 90;
+  if (rot >= 360) {
+    rot -= 360;
+  }
+  rotation.value = rot;
+  renderedPages.value.fill(false);
   renderPDF();
 }
 
@@ -561,6 +573,12 @@ watch(
           <svg style="width: 20px; height: 20px;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path fill="currentColor" d="M5.70711 16.1359C5.31659 16.5264 5.31659 17.1596 5.70711 17.5501L10.5993 22.4375C11.3805 23.2179 12.6463 23.2176 13.4271 22.4369L18.3174 17.5465C18.708 17.156 18.708 16.5228 18.3174 16.1323C17.9269 15.7418 17.2937 15.7418 16.9032 16.1323L12.7176 20.3179C12.3271 20.7085 11.6939 20.7085 11.3034 20.3179L7.12132 16.1359C6.7308 15.7454 6.09763 15.7454 5.70711 16.1359Z"/>
             <path fill="currentColor" d="M18.3174 7.88675C18.708 7.49623 18.708 6.86307 18.3174 6.47254L13.4252 1.58509C12.644 0.804698 11.3783 0.805008 10.5975 1.58579L5.70711 6.47615C5.31658 6.86667 5.31658 7.49984 5.70711 7.89036C6.09763 8.28089 6.7308 8.28089 7.12132 7.89036L11.307 3.70472C11.6975 3.31419 12.3307 3.31419 12.7212 3.70472L16.9032 7.88675C17.2937 8.27728 17.9269 8.27728 18.3174 7.88675Z"/>
+          </svg>
+        </button>
+        <div class="vue3-pdf-reader-button-separater"></div>
+        <button class="vue3-pdf-reader-button" @click="changeRotation">
+          <svg xmlns="http://www.w3.org/2000/svg" style="width: 20px; height: 20px;" viewBox="0 0 512 512">
+            <path d="M320 146s24.36-12-64-12a160 160 0 10160 160" fill="none" stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="32"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M256 58l80 80-80 80"/>
           </svg>
         </button>
       </div>

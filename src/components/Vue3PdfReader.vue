@@ -150,7 +150,6 @@ const scroller = ref<HTMLDivElement>() as Ref<HTMLDivElement>;
 const container = ref<HTMLDivElement>() as Ref<HTMLDivElement>;
 
 let pdf: PDFDocumentProxy;
-const renderComplete = ref(false);
 const renderedPages = ref<Array<boolean>>([]);
 
 const renderPDFPage = async (index: number) => {
@@ -189,7 +188,7 @@ const renderPDFPages = async () => {
     rangeStart = 1;
   } else if (rangeEnd >= totalPages.value) {
     rangeStart = rangeStart + totalPages.value - rangeEnd - 1;
-    rangeEnd = totalPages.value - 1;
+    rangeEnd = totalPages.value;
   }
 
   if (totalPages.value < RENDER_RANGE) {
@@ -207,7 +206,6 @@ const renderPDFPages = async () => {
 }
 
 const renderPDF = async () => {
-  renderComplete.value = false;
   try {
     if (!pdf) {
       pdf = await loadingTask.value.promise;
@@ -244,9 +242,6 @@ const renderPDF = async () => {
         (props.page > totalPages.value && i === totalPages.value - 1))
     ) {
       scroller.value.scrollTo(0, (itemHeightList.value[i - 1] ?? 0) + 2);
-    }
-    if (i === totalPages.value - 1) {
-      renderComplete.value = true;
     }
   }
   renderPDFPages();
@@ -285,23 +280,11 @@ const handleScroll = debounce((event: any) => {
   }
 });
 
-let timer: number;
-const renderPDFWithDebounce = () => {
+const renderPDFPagesWithDebounce = debounce(() => {
   viewportHeight.value = window.innerHeight;
-  if (
-    Math.abs(innerWidth.value - window.innerWidth) > 1 &&
-    Math.abs(containerWidth.value - container.value.offsetWidth) > 1
-  ) {
-    setWidth();
-  } else {
-    setWidth();
-    return;
-  }
-  clearTimeout(timer);
-  timer = window.setTimeout(() => {
-    renderComplete.value && renderPDF();
-  }, 500);
-};
+  setWidth();
+  renderPDFPages();
+});
 
 const innerWidth = ref<number>(0);
 const containerWidth = ref<number>(0);
@@ -320,7 +303,7 @@ onBeforeMount(async () => {
   ) {
     getDoc();
     renderPDF();
-    window.addEventListener("resize", renderPDFWithDebounce);
+    window.addEventListener("resize", renderPDFPagesWithDebounce);
     isAddEvent.value = true;
   }
   watch(
@@ -333,7 +316,7 @@ onBeforeMount(async () => {
         getDoc();
         renderPDF();
         if (!isAddEvent.value) {
-          window.addEventListener("resize", renderPDFWithDebounce);
+          window.addEventListener("resize", renderPDFPagesWithDebounce);
           isAddEvent.value = true;
         }
       }
@@ -342,20 +325,18 @@ onBeforeMount(async () => {
 });
 
 defineExpose({
-  //user set pdfWidth but pdf is blurred
-  //when container resize and widnow not resize, you can call reload
+  // when container resize and widnow not resize, you can call reload
   reload: () => {
     innerWidth.value = window.innerWidth - 2;
-    renderPDFWithDebounce();
+    renderPDFPagesWithDebounce();
     setWidth();
   },
 });
 
 onUnmounted(() => {
-  clearTimeout(timer);
   cancelAnimationFrame(animFrameId);
   isAddEvent.value &&
-    window.removeEventListener("resize", renderPDFWithDebounce);
+    window.removeEventListener("resize", renderPDFPagesWithDebounce);
 });
 // --- back to top ---
 let animFrameId: number;
@@ -499,8 +480,6 @@ const fileDownload = async () => {
   });
 }
 
-let waitToPageFun: Function | null = null;
-
 watch(
   () => props.page,
   (page: number | '' | null) => {
@@ -511,20 +490,7 @@ watch(
       // do not process if page number is invalid
       return;
     }
-    if (renderComplete.value) {
-      scroller.value.scrollTo(0, (itemHeightList.value[page - 2] ?? 0) + 2);
-    } else {
-      waitToPageFun = () => {
-        scroller.value.scrollTo(0, (itemHeightList.value[page - 2] ?? 0) + 2);
-      };
-    }
-  }
-);
-watch(
-  () => renderComplete.value,
-  (complete: boolean) => {
-    complete && waitToPageFun?.();
-    waitToPageFun = null;
+    scroller.value.scrollTo(0, (itemHeightList.value[page - 2] ?? 0) + 2);
   }
 );
 watch(

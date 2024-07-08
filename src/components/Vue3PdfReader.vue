@@ -175,6 +175,15 @@ const renderPDFPages = async () => {
   let rangeStart = currentPage.value - (RENDER_RANGE - 1) / 2;
   let rangeEnd = currentPage.value + (RENDER_RANGE - 1) / 2;
 
+  // Correct the drawing page range when the image is small.
+  for (let i = 0; i < itemHeightList.value.length; i++) {
+    const height = itemHeightList.value[i];
+    if (height >= scroller.value.scrollTop + scroller.value.offsetHeight && i > rangeEnd) {
+      rangeEnd = i + 1;
+      break;
+    }
+  }
+
   if (rangeStart < 1) {
     rangeEnd = rangeEnd - rangeStart + 1
     rangeStart = 1;

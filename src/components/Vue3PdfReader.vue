@@ -4,6 +4,24 @@ import pdfJSWorkerURL from "pdfjs-dist/build/pdf.worker?url";
 import type { PDFDocumentProxy } from "pdfjs-dist/types/src/pdf";
 import { computed, onBeforeMount, onUnmounted, ref, watch, type Ref } from "vue";
 
+export interface ToolbarConfig {
+  toolbarViewerLeft: {
+    previous: boolean,
+    next: boolean,
+    pageNumberInput: boolean
+  } | false,
+  toolbarViewerMiddle: {
+    zoomOut: boolean,
+    zoomIn: boolean,
+    scaleInput: boolean
+  } | false,
+  toolbarViewerRight: {
+    openFile: boolean,
+    print: boolean,
+    download: boolean,
+  } | false
+}
+
 const RENDER_RANGE = 5;
 const CSS_UNITS = 96.0 / 72.0;
 const dpr = ref(1);
@@ -36,6 +54,8 @@ const props = withDefaults(
     rowGap?: number;
     page?: number | '' | null;
     cMapUrl?: string;
+    // --toolbar--
+    toolbar?: ToolbarConfig | false;
   }>(),
   {
     src: undefined,
@@ -57,6 +77,23 @@ const props = withDefaults(
     rowGap: 8,
     page: 1,
     cMapUrl: "https://unpkg.com/pdfjs-dist@4.2.67/cmaps/",
+    toolbar: () => ({
+      toolbarViewerLeft: {
+        previous: true,
+        next: true,
+        pageNumberInput: true
+      },
+      toolbarViewerMiddle: {
+        zoomOut: true,
+        zoomIn: true,
+        scaleInput: true
+      },
+      toolbarViewerRight: {
+        openFile: true,
+        print: true,
+        download: true,
+      }
+    })
   }
 );
 

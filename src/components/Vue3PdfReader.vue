@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { GlobalWorkerOptions, getDocument } from 'pdfjs-dist';
 import pdfJSWorkerURL from "pdfjs-dist/build/pdf.worker?url";
-import type { PDFDocumentProxy } from "pdfjs-dist/types/src/pdf";
+import type { OnProgressParameters, PDFDocumentLoadingTask, PDFDocumentProxy } from "pdfjs-dist/types/src/pdf";
 import { computed, onBeforeMount, onUnmounted, ref, watch, type Ref } from "vue";
 
 export interface ToolbarConfig {
@@ -38,7 +38,7 @@ const props = withDefaults(
      */
     src: string | Uint8Array;
     downloadFileName?: string;
-    httpHeaders?: Record<string, any>;
+    httpHeaders?: Record<string, unknown>;
     withCredentials?: boolean;
     password?: string;
     useSystemFonts?: boolean;
@@ -115,16 +115,16 @@ const emit = defineEmits<{
 }>();
 
 const slots = defineSlots<{
-  progress?: (props: { loadRatio: number }) => any;
-  backToTopBtn?: (props: { scrollOffset: number }) => any;
+  progress?: (props: { loadRatio: number }) => unknown;
+  backToTopBtn?: (props: { scrollOffset: number }) => unknown;
 }>();
 
 const canvasRefs = ref<Array<Ref<Array<HTMLCanvasElement>>>>([]);
 
-interface Option extends Record<string, any> {
+interface Option extends Record<string, unknown> {
   url?: string;
   data?: Uint8Array;
-  httpHeaders?: Record<string, any>;
+  httpHeaders?: Record<string, unknown>;
   withCredentials?: boolean;
   password?: string;
   useSystemFonts?: boolean;
@@ -136,7 +136,7 @@ interface Option extends Record<string, any> {
 }
 
 const loadRatio = ref(0);
-const loadingTask = ref<any>(null);
+const loadingTask = ref<PDFDocumentLoadingTask | null>(null);
 const getDoc = () => {
   const option: Option = {
     httpHeaders: props.httpHeaders,
@@ -172,7 +172,7 @@ const getDoc = () => {
   }
   loadRatio.value = 0;
   loadingTask.value = getDocument(option);
-  loadingTask.value.onProgress = (progressData: any) => {
+  loadingTask.value.onProgress = (progressData: OnProgressParameters) => {
     const ratio = (progressData.loaded / progressData.total) * 100;
     loadRatio.value = ratio >= 100 ? 100 : ratio;
     emit("onProgress", loadRatio.value);
@@ -249,7 +249,7 @@ const renderPDFPages = async () => {
 const renderPDF = async () => {
   try {
     if (!pdf) {
-      pdf = await loadingTask.value.promise;
+      pdf = await loadingTask.value!.promise;
       const refs = [];
       for (let i = 0; i < pdf.numPages; i++) {
         refs.push(ref() as Ref<Array<HTMLCanvasElement>>);
@@ -290,7 +290,7 @@ const renderPDF = async () => {
 
 const viewportHeight = ref(0);
 
-const debounce = <T extends (...args: any[]) => unknown>(
+const debounce = <T extends (...args: Event[]) => unknown>(
   callback: T,
   delay = 200,
 ): ((...args: Parameters<T>) => void) => {
@@ -301,9 +301,9 @@ const debounce = <T extends (...args: any[]) => unknown>(
   }
 }
 
-const handleScroll = debounce((event: any) => {
-  scrollOffset.value = event.target.scrollTop;
-  emit("onScroll", event.target.scrollTop);
+const handleScroll = debounce((event: Event) => {
+  scrollOffset.value = (event.target as HTMLDivElement).scrollTop;
+  emit("onScroll", (event.target as HTMLDivElement).scrollTop);
   if (
     scroller.value.scrollTop + scroller.value.offsetHeight >=
     scroller.value.scrollHeight - 10
@@ -314,7 +314,7 @@ const handleScroll = debounce((event: any) => {
 
   for (let i = 0; i < itemHeightList.value.length; i++) {
     const height = itemHeightList.value[i];
-    if (height > event.target.scrollTop) {
+    if (height > (event.target as HTMLDivElement).scrollTop) {
       currentPage.value = i + 1;
       break;
     }
@@ -376,8 +376,7 @@ defineExpose({
 
 onUnmounted(() => {
   cancelAnimationFrame(animFrameId);
-  isAddEvent.value &&
-    window.removeEventListener("resize", renderPDFPagesWithDebounce);
+  window.removeEventListener("resize", renderPDFPagesWithDebounce);
 });
 // --- back to top ---
 let animFrameId: number;
@@ -439,7 +438,7 @@ const changePreviousPage = () => {
 }
 
 const scaleUp = () => {
-  for (var i = 0; i < scaleArray.length; i++) {
+  for (let i = 0; i < scaleArray.length; i++) {
     if (scaleArray[i] > scaleValue.value) {
       scaleValue.value = scaleArray[i];
       break;
@@ -449,7 +448,7 @@ const scaleUp = () => {
 }
 
 const scaleDown = () => {
-  for (var i = scaleArray.length - 1; i >= 0; i--) {
+  for (let i = scaleArray.length - 1; i >= 0; i--) {
     if (scaleArray[i] < scaleValue.value) {
       scaleValue.value = scaleArray[i];
       break;

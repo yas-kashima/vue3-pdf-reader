@@ -28,7 +28,7 @@ watchEffect(() => {
  * @param {PDFDocumentProxy} pdf - The PDF document proxy object.
  * @returns {void}
  */
-const handlePdfInit = (pdf: PDFDocumentProxy): any => {
+const handlePdfInit = (pdf: PDFDocumentProxy): void => {
   console.log(pdf);
 };
 </script>

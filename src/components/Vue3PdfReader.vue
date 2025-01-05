@@ -5,20 +5,22 @@ import type { PDFDocumentProxy } from "pdfjs-dist/types/src/pdf";
 import { computed, onBeforeMount, onUnmounted, ref, watch, type Ref } from "vue";
 
 export interface ToolbarConfig {
-  toolbarViewerLeft: {
-    previous: boolean,
-    next: boolean,
-    pageNumberInput: boolean
-  } | false,
-  toolbarViewerMiddle: {
-    zoomOut: boolean,
-    zoomIn: boolean,
-    scaleInput: boolean
-  } | false,
-  toolbarViewerRight: {
-    openFile: boolean,
-    print: boolean,
-    download: boolean,
+  toolbarViewer: {
+    toolbarViewerLeft: {
+      previous: boolean,
+      next: boolean,
+      pageNumberInput: boolean
+    } | false,
+    toolbarViewerMiddle: {
+      zoomOut: boolean,
+      zoomIn: boolean,
+      scaleInput: boolean
+    } | false,
+    toolbarViewerRight: {
+      openFile: boolean,
+      print: boolean,
+      download: boolean,
+    } | false
   } | false
 }
 
@@ -78,20 +80,22 @@ const props = withDefaults(
     page: 1,
     cMapUrl: "https://unpkg.com/pdfjs-dist@4.2.67/cmaps/",
     toolbar: () => ({
-      toolbarViewerLeft: {
-        previous: true,
-        next: true,
-        pageNumberInput: true
-      },
-      toolbarViewerMiddle: {
-        zoomOut: true,
-        zoomIn: true,
-        scaleInput: true
-      },
-      toolbarViewerRight: {
-        openFile: true,
-        print: true,
-        download: true,
+      toolbarViewer: {
+        toolbarViewerLeft: {
+          previous: true,
+          next: true,
+          pageNumberInput: true
+        },
+        toolbarViewerMiddle: {
+          zoomOut: true,
+          zoomIn: true,
+          scaleInput: true
+        },
+        toolbarViewerRight: {
+          openFile: true,
+          print: true,
+          download: true,
+        }
       }
     })
   }
